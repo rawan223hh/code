@@ -1,4 +1,4 @@
-DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,7 +9,9 @@ DOCTYPE html>
         .container { max-width: 600px; margin: auto; }
         h2 { text-align: center; }
         .question { margin-bottom: 15px; }
-        .result { display: none; padding: 15px; background: #f4f4f4; margin-top: 20px; }
+        .result { display: none; padding: 15px; background: #f4f4f4; margin-top: 20px; border: 1px solid #ccc; }
+        button { display: block; width: 100%; padding: 10px; margin-top: 10px; background: #28a745; color: white; border: none; cursor: pointer; }
+        button:hover { background: #218838; }
     </style>
 </head>
 <body>
@@ -97,28 +99,37 @@ DOCTYPE html>
                     "طفلك عنده ذاكرة قوية؟ / Does your child have a good memory?",
                     "طفلك بيعمل مجهود جسدي قليل؟ / Does your child experience low physical stamina?",
                     "Does your child crave salty, meats or hot foods? / طفلك بيحب الأكلات المالحة، اللحوم أو الأكلات السخنة؟",
-                 ]
+                         ]
             }
         };
 
         function populateQuestions() {
             const questionsDiv = document.getElementById('questions');
+            questionsDiv.innerHTML = ''; // Clear previous questions
+
             Object.keys(elements).forEach(element => {
+                const section = document.createElement('div');
+
+                // Section Title (Element Name)
                 const header = document.createElement('h3');
-              header.textContent = `${element} - ${elements[element].traits}`;
-                questionsDiv.appendChild(header);
-                elements[element].questions.forEach(question => {
+                header.textContent = `${element} - ${elements[element].traits}`;
+                section.appendChild(header);
+
+                // Questions for this element
+                elements[element].questions.forEach((question, index) => {
                     const div = document.createElement('div');
                     div.className = 'question';
-                   div.innerHTML = `
-                      <label>${question}</label>
-                      <select name="${element}" required>
-                        <option value="1">Rarely</option>
-                        <option value="2">Sometimes</option>
-                        <option value="3">Very Often</option>
-                      </select>`;
-                    questionsDiv.appendChild(div);
+                    div.innerHTML = `
+                        <label>${question}</label>
+                        <select name="${element}-${index}" required>
+                            <option value="1">نادرًا / Rarely</option>
+                            <option value="2">أحيانًا / Sometimes</option>
+                            <option value="3">غالبًا / Often</option>
+                        </select>`;
+                    section.appendChild(div);
                 });
+
+                questionsDiv.appendChild(section);
             });
         }
 
@@ -126,20 +137,31 @@ DOCTYPE html>
             event.preventDefault();
             const formData = new FormData(event.target);
             const scores = { Wood: 0, Fire: 0, Earth: 0, Metal: 0, Water: 0 };
-            
+
+            // Calculate scores for each element
             formData.forEach((value, key) => {
-                scores[key] += parseInt(value);
+                const elementType = key.split('-')[0]; // Extract element name
+                scores[elementType] += parseInt(value);
             });
-            
-            const dominantElement = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-            
-            document.getElementById('result').innerHTML = <strong>العنصر المسيطر:</strong> ${dominantElement} <br>
-                <strong>الصفات:</strong> ${elements[dominantElement].traits} <br>
-                <strong>النصائح:</strong> ${elements[dominantElement].advice} <br>
-                <strong>المهن المحتملة:</strong> ${elements[dominantElement].careers};
+
+            // Find the highest-scoring element(s)
+            const highestScore = Math.max(...Object.values(scores));
+            const dominantElements = Object.keys(scores).filter(key => scores[key] === highestScore);
+
+            let resultHTML = "<h3>العناصر المسيطرة / Dominant Elements:</h3>";
+            dominantElements.forEach(element => {
+                resultHTML += `
+                    <strong>${element}</strong><br>
+                    <strong>الصفات / Traits:</strong> ${elements[element].traits}<br>
+                    <strong>المهن المحتملة / Careers:</strong> ${elements[element].careers}<br>
+                    <strong>النصائح / Advice:</strong> ${elements[element].advice}<br><br>
+                `;
+            });
+
+            document.getElementById('result').innerHTML = resultHTML;
             document.getElementById('result').style.display = 'block';
         });
-        
+
         document.addEventListener('DOMContentLoaded', populateQuestions);
     </script>
 </body>
